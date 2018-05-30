@@ -13,8 +13,11 @@ using MySplunkApp;
 public partial class MainWindow : Gtk.Window
 {
 	static string user;
-
     static string pass;
+	static string token;
+    public static string respOut;
+    public static Stream streamOut;
+    
 	public MainWindow() : base(Gtk.WindowType.Toplevel)
 	{
 		Build();
@@ -38,21 +41,32 @@ public partial class MainWindow : Gtk.Window
     
 	protected void OnButton5Clicked(object sender, EventArgs e)
 	{
-	//{
-		//string contents = login(user, pass).Result;
-		//textview1.Buffer.Text = contents;
-
-		var a = login(user,pass).Result;
-		if (a != null)
+		//var a = BasicAuth(user, pass).Result;
+		var a = login(user, pass).Result;
+        if(a == true)
+        //if (a != null)
         {
-			textview1.Buffer.Text = "Logging in.";
+            textview1.Buffer.Text = "Logging in.";
             this.Destroy();
             Window2 win2 = new Window2();
             win2.Show();
         }
-		else{
-			textview1.Buffer.Text = "Failed.";
-		}
+        else
+        {
+            textview1.Buffer.Text = "Failed.";
+        }
+	      
+		//var a = login(user,pass).Result;
+		//if (a != null)
+  //      {
+		//	textview1.Buffer.Text = "Logging in.";
+  //          this.Destroy();
+  //          Window2 win2 = new Window2();
+  //          win2.Show();
+  //      }
+		//else{
+		//	textview1.Buffer.Text = "Failed.";
+		//}
 	}
 
 	protected void OnButton3Clicked(object sender, EventArgs e)
@@ -64,7 +78,7 @@ public partial class MainWindow : Gtk.Window
 	}
 
 
-	static async Task<string> login(string username, string password)
+	static async Task<bool> login(string username, string password)
 	{
 		ServicePointManager.ServerCertificateValidationCallback =
 (System.Object obj, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) => true;
@@ -81,17 +95,16 @@ public partial class MainWindow : Gtk.Window
 			HttpResponseMessage response = await client.PostAsync(client.BaseAddress, body);
 			HttpContent content = response.Content;
 
+			bool x = response.IsSuccessStatusCode;
 			// lambda here
 			string result = await content.ReadAsStringAsync();
-			return result;
+			return x;
+
 		}
 	}
 
 
-	static string token;
-	public static string respOut;
-	public static Stream streamOut;
-    
+
 
 
 	public static async Task<bool> BasicAuth(string username, string password)
