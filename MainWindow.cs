@@ -14,9 +14,10 @@ public partial class MainWindow : Gtk.Window
 {
 	static string user;
     static string pass;
-	static string token;
+	static string token = null;
     public static string respOut;
     public static Stream streamOut;
+	public static bool xAuth;
     
 	public MainWindow() : base(Gtk.WindowType.Toplevel)
 	{
@@ -41,32 +42,26 @@ public partial class MainWindow : Gtk.Window
     
 	protected void OnButton5Clicked(object sender, EventArgs e)
 	{
-		//var a = BasicAuth(user, pass).Result;
-		var a = login(user, pass).Result;
-        if(a == true)
-        //if (a != null)
+		
+		String a = login(user, pass).Result;
+		//Decoder(a);
+
+        if(xAuth == true)
+      
         {
-            textview1.Buffer.Text = "Logging in.";
-            this.Destroy();
-            Window2 win2 = new Window2();
-            win2.Show();
+			//MessageDialog messageDialog = new MessageDialog("login success.");
+
+			textview1.Buffer.Text = string.Format("Logging in.");
+            //this.Destroy();
+            //Window2 win2 = new Window2();
+            //win2.Show();
         }
         else
         {
             textview1.Buffer.Text = "Failed.";
         }
 	      
-		//var a = login(user,pass).Result;
-		//if (a != null)
-  //      {
-		//	textview1.Buffer.Text = "Logging in.";
-  //          this.Destroy();
-  //          Window2 win2 = new Window2();
-  //          win2.Show();
-  //      }
-		//else{
-		//	textview1.Buffer.Text = "Failed.";
-		//}
+
 	}
 
 	protected void OnButton3Clicked(object sender, EventArgs e)
@@ -76,9 +71,9 @@ public partial class MainWindow : Gtk.Window
 		string s = string.Format("user {0} pass {1}", user, pass);
 		return s;
 	}
+    
 
-
-	static async Task<bool> login(string username, string password)
+	public static async Task<string> login(string username, string password)
 	{
 		ServicePointManager.ServerCertificateValidationCallback =
 (System.Object obj, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors) => true;
@@ -90,65 +85,48 @@ public partial class MainWindow : Gtk.Window
 			var postData = new List<KeyValuePair<string, string>>();
 			postData.Add(new KeyValuePair<string, string>("username", username));
 			postData.Add(new KeyValuePair<string, string>("password", password));
-
+            
 			HttpContent body = new FormUrlEncodedContent(postData);
 			HttpResponseMessage response = await client.PostAsync(client.BaseAddress, body);
 			HttpContent content = response.Content;
 
-			bool x = response.IsSuccessStatusCode;
+			 xAuth = response.IsSuccessStatusCode;
+
+
+			//streamOut = await content.ReadAsStreamAsync();
+            
 			// lambda here
 			string result = await content.ReadAsStringAsync();
-			return x;
+
+			var z = await content.ReadAsStreamAsync();
+
+
+			//if (x == true){
+			//	DecodeResponse();
+
+			//}
+			//return z;
+			return result;
 
 		}
 	}
 
-
-
-
-
-	public static async Task<bool> BasicAuth(string username, string password)
-	{
-		bool boolAuth = false;
-		using (HttpClient client = new HttpClient())
-		{
-			client.BaseAddress = new Uri("https://10.0.0.62:8089/services/auth/login");
-			client.DefaultRequestHeaders.Add("Authorization", "Basic");
-			var postData = new List<KeyValuePair<string, string>>();
-			postData.Add(new KeyValuePair<string, string>("username", username));
-			postData.Add(new KeyValuePair<string, string>("password", password));
-
-			HttpContent body = new FormUrlEncodedContent(postData);
-			HttpResponseMessage response = await client.PostAsync(client.BaseAddress, body);
-			HttpContent content = response.Content;
-			if (response.IsSuccessStatusCode)
-			{
-				boolAuth = true;
-				DecodeResponse();
-			}
-			// lambda here
-			string result = await content.ReadAsStringAsync();
-			respOut = result;
-			streamOut = await content.ReadAsStreamAsync();
-			// token => decode()
-		}
-		return boolAuth;
-	}
 	[XmlType("response")]
-	public partial class tokenClass
+	public partial class tokenClass1
 	{
 		[XmlElement("sessionKey")]
 		public string sessionKey { get; set; }
 	}
 
-	public static void DecodeResponse()
-	{
-		XmlSerializer serializer = new XmlSerializer(typeof(tokenClass));
-		var obj = (tokenClass)serializer.Deserialize(streamOut);
-		//return obj.sessionKey;
-		token = obj.sessionKey;
-
-	}
+	public static void Decoder(Stream stream)
+    {
+        XmlSerializer serializer = new
+   XmlSerializer(typeof(tokenClass1));
+        tokenClass1 i;
+        i = (tokenClass1)serializer.Deserialize(stream);
+        token = i.sessionKey;
+       
+    }
 }
 
         
